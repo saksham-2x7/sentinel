@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel — iQOO Hackathon 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --card: #1a1a1a;
+    --border: rgba(255,255,255,0.08);
+    --red: #e8342a;
+    --orange: #ff9500;
+    --green: #30d158;
+    --blue: #0a84ff;
+    --text: #ffffff;
+    --sub: #8e8e93;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); overflow:hidden; }
+
+  .deck { width:100%; height:100%; position:relative; }
+  .slide {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    padding:60px 80px;
+    opacity:0; transform:translateX(60px);
+    transition:opacity .45s ease, transform .45s ease;
+    pointer-events:none;
+  }
+  .slide.active { opacity:1; transform:translateX(0); pointer-events:all; }
+  .slide.exit { opacity:0; transform:translateX(-60px); }
+
+  /* Counter */
+  .counter {
+    position:fixed; top:28px; right:40px;
+    font-size:12px; font-weight:600; letter-spacing:2px;
+    color:var(--sub); font-family:var(--mono);
+    z-index:100;
+  }
+  .counter span { color:var(--red); }
+
+  /* Dots */
+  .dots {
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; z-index:100;
+  }
+  .dot {
+    width:6px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.2); cursor:pointer;
+    transition:all .3s;
+  }
+  .dot.active { background:var(--red); transform:scale(1.4); }
+
+  /* Nav arrows */
+  .nav-btn {
+    position:fixed; bottom:20px; z-index:100;
+    background:rgba(255,255,255,0.05); border:1px solid var(--border);
+    color:var(--sub); font-size:18px; width:44px; height:44px;
+    border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:all .2s; backdrop-filter:blur(10px);
+  }
+  .nav-btn:hover { background:rgba(255,255,255,0.1); color:#fff; }
+  .nav-prev { left:calc(50% - 70px); }
+  .nav-next { right:calc(50% - 70px); }
+
+  /* Logo bar top left */
+  .logo-bar {
+    position:fixed; top:24px; left:36px;
+    display:flex; align-items:center; gap:10px; z-index:100;
+  }
+  .logo-shield { font-size:20px; }
+  .logo-text { font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.5); }
+
+  /* ─── SLIDE STYLES ─── */
+
+  /* S1 Title */
+  .s1-shield { font-size:90px; margin-bottom:24px; filter:drop-shadow(0 0 40px rgba(232,52,42,0.5)); }
+  .s1-title { font-size:96px; font-weight:900; letter-spacing:-4px; line-height:1; margin-bottom:16px; }
+  .s1-title span { color:var(--red); }
+  .s1-sub { font-size:20px; font-weight:400; color:var(--sub); margin-bottom:36px; }
+  .s1-tag {
+    display:inline-block; padding:10px 28px;
+    background:linear-gradient(135deg, var(--red), #c0201a);
+    border-radius:100px; font-size:16px; font-weight:700;
+    letter-spacing:0.5px; margin-bottom:52px;
+  }
+  .s1-team { font-size:13px; color:var(--sub); letter-spacing:1px; }
+  .s1-team strong { color:rgba(255,255,255,0.7); }
+
+  /* Section header */
+  .slide-label {
+    position:absolute; top:40px; left:80px;
+    font-size:11px; font-weight:700; letter-spacing:3px;
+    color:var(--red); text-transform:uppercase;
+  }
+  .slide-title {
+    font-size:52px; font-weight:800; letter-spacing:-2px;
+    margin-bottom:48px; text-align:center; line-height:1.1;
+  }
+
+  /* Stat cards */
+  .stat-row { display:flex; gap:24px; width:100%; max-width:960px; }
+  .stat-card {
+    flex:1; background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:40px 32px; text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:var(--accent, var(--red));
+  }
+  .stat-num { font-size:72px; font-weight:900; letter-spacing:-3px; line-height:1; margin-bottom:8px; color:var(--accent, var(--red)); }
+  .stat-desc { font-size:14px; color:var(--sub); line-height:1.6; }
+  .stat-card.orange { --accent: var(--orange); }
+  .stat-card.green { --accent: var(--green); }
+  .slide-note { margin-top:32px; font-size:14px; color:var(--sub); text-align:center; max-width:700px; }
+  .slide-note strong { color:rgba(255,255,255,0.8); }
+
+  /* Flow diagram */
+  .flow { display:flex; align-items:center; gap:0; margin:0 auto; max-width:900px; width:100%; }
+  .flow-box {
+    flex:1; background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:32px 24px; text-align:center;
+  }
+  .flow-icon { font-size:40px; margin-bottom:12px; }
+  .flow-label { font-size:13px; font-weight:700; letter-spacing:1.5px; color:var(--red); margin-bottom:6px; }
+  .flow-desc { font-size:13px; color:var(--sub); line-height:1.5; }
+  .flow-arrow { font-size:28px; color:var(--red); padding:0 16px; flex-shrink:0; }
+  .flow-pills { display:flex; gap:12px; justify-content:center; margin-top:40px; flex-wrap:wrap; }
+  .pill {
+    padding:8px 20px; border-radius:100px;
+    border:1px solid var(--border); font-size:13px;
+    font-weight:600; color:var(--sub); background:var(--card);
+  }
+
+  /* Steps */
+  .steps { display:flex; gap:20px; width:100%; max-width:960px; }
+  .step-card {
+    flex:1; background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:36px 28px;
+  }
+  .step-num {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:36px; height:36px; border-radius:50%;
+    background:var(--red); font-size:14px; font-weight:800;
+    margin-bottom:20px;
+  }
+  .step-icon { font-size:32px; margin-bottom:12px; }
+  .step-title { font-size:17px; font-weight:700; margin-bottom:10px; }
+  .step-desc { font-size:14px; color:var(--sub); line-height:1.6; }
+  .step-note { margin-top:28px; font-size:13px; color:var(--sub); font-style:italic; text-align:center; }
+
+  /* Architecture */
+  .arch-grid { display:grid; grid-template-columns:1fr 1fr; gap:32px; width:100%; max-width:960px; }
+  .arch-panel { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:36px; }
+  .arch-panel-title { font-size:12px; font-weight:700; letter-spacing:2px; color:var(--red); margin-bottom:24px; text-transform:uppercase; }
+  .arch-item { display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; }
+  .arch-dot { width:6px; height:6px; border-radius:50%; background:var(--red); margin-top:6px; flex-shrink:0; }
+  .arch-item-text { font-size:14px; line-height:1.5; }
+  .arch-item-text strong { color:#fff; font-weight:600; }
+  .arch-item-text small { display:block; color:var(--sub); font-size:12px; }
+  .arch-panel.right .arch-dot { background:var(--green); }
+
+  /* Vuln grid */
+  .vuln-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; width:100%; max-width:960px; }
+  .vuln-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:24px 20px; text-align:center;
+  }
+  .vuln-icon { font-size:32px; margin-bottom:10px; }
+  .vuln-name { font-size:13px; font-weight:700; margin-bottom:6px; }
+  .vuln-ex { font-size:11px; color:var(--sub); }
+
+  /* Timeline */
+  .timeline { display:flex; gap:0; width:100%; max-width:960px; position:relative; }
+  .timeline::before {
+    content:''; position:absolute;
+    top:44px; left:10%; right:10%; height:2px;
+    background:linear-gradient(90deg, var(--red), var(--orange), var(--green));
+  }
+  .phase { flex:1; text-align:center; padding:0 16px; }
+  .phase-dot {
+    width:20px; height:20px; border-radius:50%;
+    margin:34px auto 28px;
+    position:relative; z-index:1;
+  }
+  .phase:nth-child(1) .phase-dot { background:var(--red); box-shadow:0 0 16px rgba(232,52,42,0.6); }
+  .phase:nth-child(2) .phase-dot { background:var(--orange); box-shadow:0 0 16px rgba(255,149,0,0.6); }
+  .phase:nth-child(3) .phase-dot { background:var(--green); box-shadow:0 0 16px rgba(48,209,88,0.6); }
+  .phase-label { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--sub); margin-bottom:10px; text-transform:uppercase; }
+  .phase-title { font-size:18px; font-weight:800; margin-bottom:12px; }
+  .phase-desc { font-size:13px; color:var(--sub); line-height:1.6; }
+  .market-row { display:flex; gap:32px; margin-top:44px; }
+  .market-stat { text-align:center; flex:1; }
+  .market-num { font-size:44px; font-weight:900; letter-spacing:-2px; color:var(--orange); }
+  .market-label { font-size:13px; color:var(--sub); margin-top:4px; }
+
+  /* Team */
+  .team-row { display:flex; gap:24px; margin-bottom:48px; width:100%; max-width:800px; }
+  .team-card {
+    flex:1; background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:32px 24px; text-align:center;
+  }
+  .team-avatar {
+    width:64px; height:64px; border-radius:50%;
+    background:linear-height(135deg, var(--red), #800);
+    margin:0 auto 16px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; font-weight:900;
+    background:linear-gradient(135deg, #2a0a0a, var(--red));
+    color:var(--red); border:2px solid var(--red);
+  }
+  .team-name { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .team-role { font-size:12px; color:var(--sub); line-height:1.6; }
+  .team-quote {
+    font-size:22px; font-weight:700; text-align:center;
+    max-width:720px; line-height:1.4; margin-bottom:32px;
+    color:rgba(255,255,255,0.85);
+  }
+  .team-quote span { color:var(--red); }
+  .gh-badge {
+    display:inline-flex; align-items:center; gap:10px;
+    padding:10px 24px; border-radius:100px;
+    border:1px solid var(--border); background:var(--card);
+    font-size:13px; font-weight:600; color:var(--sub);
+    font-family:var(--mono);
+  }
+  .gh-badge span { color:#fff; }
+
+  /* Print */
+  @media print {
+    html, body { overflow:visible; }
+    .deck { height:auto; position:static; }
+    .slide { position:relative; opacity:1 !important; transform:none !important;
+      page-break-after:always; height:100vh; pointer-events:all; }
+    .nav-btn, .dots, .counter, .logo-bar { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="logo-bar">
+  <span class="logo-shield">🛡️</span>
+  <span class="logo-text">SENTINEL</span>
+</div>
+
+<div class="counter">SLIDE <span id="cur">01</span> / 08</div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1 -->
+  <div class="slide active" id="s1">
+    <div class="s1-shield">🛡️</div>
+    <div class="s1-title">SENTI<span>NEL</span></div>
+    <div class="s1-sub">On-Device AI Code Security Scanner</div>
+    <div class="s1-tag">Your code. Your phone. Your rules.</div>
+    <div class="s1-team">
+      <strong>Naman Raghav · Chezhil · Ansh</strong><br>
+      iQOO Hackathon 2026 &nbsp;|&nbsp; Track 06: Developer Tools
+    </div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide" id="s2">
+    <div class="slide-label">The Problem</div>
+    <div class="slide-title">The $8 Trillion Problem</div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num">63%</div>
+        <div class="stat-desc">of Fortune 500 companies ban cloud AI tools for code review — proprietary code leaks to external servers</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-num">15%</div>
+        <div class="stat-desc">of security vulnerabilities are caught before reaching production — the rest ship silently</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-num">₹0</div>
+        <div class="stat-desc">cost of accessible, mobile-native, on-device code security tools that exist anywhere in the world</div>
+      </div>
+    </div>
+    <div class="slide-note">Developers building banking software, healthcare systems, and defence applications have <strong>zero AI security assistance</strong>. Until now.</div>
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide" id="s3">
+    <div class="slide-label">The Solution</div>
+    <div class="slide-title">Introducing Sentinel</div>
+    <div class="flow">
+      <div class="flow-box">
+        <div class="flow-icon">📁</div>
+        <div class="flow-label">Load Code</div>
+        <div class="flow-desc">Paste or load any file via iQOO Office Kit. Python, JS, Java, Kotlin, Go, C++</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="flow-icon">🧠</div>
+        <div class="flow-label">Phi-3 Mini on NPU</div>
+        <div class="flow-desc">3.8B parameter LLM, INT4 quantized, running on Snapdragon Neural Processing Unit</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="flow-icon">📊</div>
+        <div class="flow-label">Security Report</div>
+        <div class="flow-desc">Severity-ranked findings, line numbers, plain-English descriptions, fix suggestions</div>
+      </div>
+    </div>
+    <div class="flow-pills">
+      <div class="pill">3.8B Params</div>
+      <div class="pill">INT4 Quantized</div>
+      <div class="pill">Zero Cloud</div>
+      <div class="pill">Works Offline</div>
+      <div class="pill">~9 Second Scan</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide" id="s4">
+    <div class="slide-label">How It Works</div>
+    <div class="slide-title">From Code to Report in ~9 Seconds</div>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">📂</div>
+        <div class="step-title">Load via Office Kit</div>
+        <div class="step-desc">Load a code file via iQOO Office Kit file picker, or paste directly. Supports .py, .js, .java, .kt, .ts, .go, .cpp</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">⚡</div>
+        <div class="step-title">Phi-3 Scans On-Device</div>
+        <div class="step-desc">MediaPipe LLM Inference runs Phi-3 Mini on the Snapdragon NPU. Code is processed in memory — never written to disk, never transmitted</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-icon">🔴</div>
+        <div class="step-title">Severity-Ranked Report</div>
+        <div class="step-desc">Color-coded findings: HIGH · MED · LOW. Each card shows line number, description, and a specific code fix suggestion</div>
+      </div>
+    </div>
+    <div class="step-note">Tested in airplane mode. Not a single byte of code left the phone.</div>
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide" id="s5">
+    <div class="slide-label">Technical Architecture</div>
+    <div class="slide-title">Built to Run on the Edge</div>
+    <div class="arch-grid">
+      <div class="arch-panel">
+        <div class="arch-panel-title">The Stack</div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>Kotlin + Jetpack Compose</strong><small>Modern Android, Material 3 UI</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>MediaPipe LLM Inference API</strong><small>Google · Snapdragon NPU acceleration</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>Phi-3 Mini 4K INT4 (3.8B params)</strong><small>Microsoft · MIT License · ~2.2GB · Zero cost</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>Room DB</strong><small>Local scan history with scores</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>iQOO Office Kit</strong><small>File picker · Share sheet · Floating widget</small></div></div>
+      </div>
+      <div class="arch-panel right">
+        <div class="arch-panel-title" style="color:var(--green)">Why On-Device</div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>Zero latency</strong><small>No network round-trip — results in seconds</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>Full privacy guarantee</strong><small>Code never transmitted to any server</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>Air-gapped environments</strong><small>Works in defence, banking, secure labs</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>100% free stack</strong><small>MIT-licensed model · Open-source runtime</small></div></div>
+        <div class="arch-item"><div class="arch-dot"></div><div class="arch-item-text"><strong>Brownie points ✓</strong><small>Local open-source model at the core</small></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 -->
+  <div class="slide" id="s6">
+    <div class="slide-label">Coverage</div>
+    <div class="slide-title">7 Vulnerability Categories</div>
+    <div class="vuln-grid">
+      <div class="vuln-card"><div class="vuln-icon">🔑</div><div class="vuln-name">Hardcoded Secrets</div><div class="vuln-ex">API keys, tokens, passwords</div></div>
+      <div class="vuln-card"><div class="vuln-icon">💉</div><div class="vuln-name">SQL Injection</div><div class="vuln-ex">Unsanitized query params</div></div>
+      <div class="vuln-card"><div class="vuln-icon">🌐</div><div class="vuln-name">XSS</div><div class="vuln-ex">Unescaped user input</div></div>
+      <div class="vuln-card"><div class="vuln-icon">🔐</div><div class="vuln-name">Broken Auth</div><div class="vuln-ex">JWT none-algo, missing checks</div></div>
+      <div class="vuln-card" style="grid-column:span 1"><div class="vuln-icon">📡</div><div class="vuln-name">Insecure Comms</div><div class="vuln-ex">HTTP not HTTPS</div></div>
+      <div class="vuln-card"><div class="vuln-icon">📦</div><div class="vuln-name">Sensitive Data</div><div class="vuln-ex">PII in logs, unencrypted storage</div></div>
+      <div class="vuln-card"><div class="vuln-icon">⚠️</div><div class="vuln-name">Logic Flaws</div><div class="vuln-ex">Null dereference, overflow</div></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 -->
+  <div class="slide" id="s7">
+    <div class="slide-label">Vision</div>
+    <div class="slide-title">The Road Ahead</div>
+    <div class="timeline">
+      <div class="phase">
+        <div class="phase-dot"></div>
+        <div class="phase-label">Phase 1 · Now</div>
+        <div class="phase-title">Hackathon MVP</div>
+        <div class="phase-desc">Android app · 7 vuln categories · 6 language support · iQOO Office Kit · Scan history</div>
+      </div>
+      <div class="phase">
+        <div class="phase-dot"></div>
+        <div class="phase-label">Phase 2 · 6 months</div>
+        <div class="phase-title">iQOO OEM</div>
+        <div class="phase-desc">Sentinel SDK pre-installed on developer-focused iQOO devices · Enterprise procurement</div>
+      </div>
+      <div class="phase">
+        <div class="phase-dot"></div>
+        <div class="phase-label">Phase 3 · 12 months</div>
+        <div class="phase-title">Enterprise B2B</div>
+        <div class="phase-desc">On-premise SDK for air-gapped facilities · ₹500/dev/month vs ₹3,000 cloud alternatives</div>
+      </div>
+    </div>
+    <div class="market-row">
+      <div class="market-stat"><div class="market-num">27M</div><div class="market-label">developers in India</div></div>
+      <div class="market-stat"><div class="market-num">$22.5B</div><div class="market-label">security software market by 2027</div></div>
+      <div class="market-stat"><div class="market-num">0</div><div class="market-label">competing mobile-native products</div></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 -->
+  <div class="slide" id="s8">
+    <div class="slide-label">Team</div>
+    <div class="team-row">
+      <div class="team-card">
+        <div class="team-avatar">N</div>
+        <div class="team-name">Naman Raghav</div>
+        <div class="team-role">Team Lead<br>Android Development<br>Critical Debugging</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">C</div>
+        <div class="team-name">Chezhil</div>
+        <div class="team-role">AI / ML Lead<br>LLM Integration<br>Complex Problem Solving</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">A</div>
+        <div class="team-name">Ansh</div>
+        <div class="team-role">Product Lead<br>UI / UX · Prompt Engineering<br>Full-Stack</div>
+      </div>
+    </div>
+    <div class="team-quote">We're not pitching a wireframe.<br><span>We're building something that actually runs.</span></div>
+    <div class="gh-badge">⬡ &nbsp;<span>github.com/saksham-2x7/sentinel</span></div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<button class="nav-btn nav-prev" onclick="go(-1)">‹</button>
+<div class="dots" id="dots"></div>
+<button class="nav-btn nav-next" onclick="go(1)">›</button>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dotsEl = document.getElementById('dots');
+  const curEl = document.getElementById('cur');
+  let cur = 0;
+
+  // Build dots
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  });
+
+  function goTo(n) {
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('exit');
+    setTimeout(() => slides[cur].classList.remove('exit'), 450);
+    cur = (n + slides.length) % slides.length;
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i === cur));
+    curEl.textContent = String(cur + 1).padStart(2, '0');
+  }
+
+  function go(dir) { goTo(cur + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  });
+</script>
+</body>
+</html>
