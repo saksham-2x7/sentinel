@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sentinel</string>
+    <string name="tagline">Your code. Your phone. Your rules.</string>
+    <string name="scan">Scan Code</string>
+    <string name="scanning">Scanning…</string>
+    <string name="history">Scan History</string>
+    <string name="no_model">No model loaded</string>
+</resources>
