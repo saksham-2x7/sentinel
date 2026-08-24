@@ -24,7 +24,7 @@ Sentinel is a mobile-native, fully on-device AI code security scanner built for 
 |------|------|
 | Naman Raghav | Team Lead, Android Dev, Debugging |
 | Chezhil | AI/ML, Complex Problem Solving |
-| Ansh | Product, UI/UX, Prompt Engineering |
+| Saksham | Product, UI/UX, Prompt Engineering |
 
 ## Tagline
 > *Your code. Your phone. Your rules.*
