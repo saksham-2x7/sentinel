@@ -71,7 +71,7 @@ class ScanRepository(context: Context) {
                 
             // Avoid saving the dummy id = 0 in firestore
             val toSave = result.copy(id = docRef.id.hashCode().toLong())
-            docRef.set(toSave).await()
+            docRef.set(toSave)
             toSave.id
         } catch (e: Exception) {
             Log.e("ScanRepository", "Error saving scan", e)
