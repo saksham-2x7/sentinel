@@ -37,33 +37,63 @@ object ResultParser {
                 scanDurationMs = durationMs
             )
         } catch (e: Exception) {
+            // If the model messed up the JSON, let's at least show a generic finding so the UI isn't empty!
             ScanResult(
                 language = language,
                 codePreview = codePreview,
                 fileName = fileName,
-                securityScore = 50,
-                findings = emptyList(),
+                securityScore = 40,
+                findings = listOf(
+                    Finding(
+                        line = null,
+                        type = FindingType.LOGIC_FLAW,
+                        severity = Severity.HIGH,
+                        title = "Unformatted AI Response",
+                        description = "The AI found issues but failed to format them into valid JSON. Raw output snippet: ${rawResponse.take(100)}...",
+                        fix = "Try scanning a smaller snippet of code or rewording the prompt."
+                    )
+                ),
                 scanDurationMs = durationMs
             )
         }
     }
+
     private fun extractJson(raw: String): String {
-        val cleaned = raw.trim()
+        var cleaned = raw.trim()
+        // Strip markdown code fences if the model ignored the instructions
+        if (cleaned.startsWith("```json")) {
+            cleaned = cleaned.removePrefix("```json").trim()
+        }
+        if (cleaned.endsWith("```")) {
+            cleaned = cleaned.removeSuffix("```").trim()
+        }
+        
         val withPrefix = if (cleaned.startsWith("{")) cleaned else "{\"security_score\":$cleaned"
         val lastBrace = withPrefix.lastIndexOf('}')
         return if (lastBrace >= 0) withPrefix.substring(0, lastBrace + 1) else withPrefix
     }
+
     private fun LlmFinding.toFinding(): Finding? {
-        val findingType = try { FindingType.valueOf(type.trim().uppercase()) } catch (e: Exception) { return null }
-        val severityEnum = try { Severity.valueOf(severity.trim().uppercase()) } catch (e: Exception) { Severity.MEDIUM }
-        if (title.isBlank()) return null
+        // Relaxed enum matching! Default to LOGIC_FLAW if the AI hallucinated a type.
+        val findingType = try { 
+            FindingType.valueOf(type.trim().uppercase().replace(" ", "_")) 
+        } catch (e: Exception) { 
+            FindingType.LOGIC_FLAW 
+        }
+        
+        val severityEnum = try { 
+            Severity.valueOf(severity.trim().uppercase()) 
+        } catch (e: Exception) { 
+            Severity.MEDIUM 
+        }
+        
         return Finding(
             line = line,
             type = findingType,
             severity = severityEnum,
-            title = title.take(80),
-            description = description.take(300),
-            fix = fix.take(300)
+            title = if (title.isNotBlank()) title.take(80) else "Security Risk",
+            description = if (description.isNotBlank()) description.take(300) else "An issue was detected here.",
+            fix = if (fix.isNotBlank()) fix.take(300) else "Review this code block."
         )
     }
 }

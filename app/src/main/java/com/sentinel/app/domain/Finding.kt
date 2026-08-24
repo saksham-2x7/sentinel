@@ -1,4 +1,5 @@
 package com.sentinel.app.domain
+
 enum class FindingType {
     HARDCODED_SECRET,
     SQL_INJECTION,
@@ -8,6 +9,7 @@ enum class FindingType {
     SENSITIVE_DATA,
     LOGIC_FLAW,
     DEPENDENCY_RISK;
+
     fun displayName(): String = when (this) {
         HARDCODED_SECRET -> "Hardcoded Secret"
         SQL_INJECTION -> "SQL Injection"
@@ -18,6 +20,7 @@ enum class FindingType {
         LOGIC_FLAW -> "Logic Flaw"
         DEPENDENCY_RISK -> "Dependency Risk"
     }
+
     fun emoji(): String = when (this) {
         HARDCODED_SECRET -> "🔑"
         SQL_INJECTION -> "💉"
@@ -29,15 +32,18 @@ enum class FindingType {
         DEPENDENCY_RISK -> "📚"
     }
 }
+
 enum class Severity {
     HIGH, MEDIUM, LOW;
+
     fun label(): String = name.lowercase().replaceFirstChar { it.uppercase() }
 }
+
 data class Finding(
     val line: Int? = null,
-    val type: FindingType,
-    val severity: Severity,
-    val title: String,
-    val description: String,
-    val fix: String
+    val type: FindingType = FindingType.LOGIC_FLAW,
+    val severity: Severity = Severity.LOW,
+    val title: String = "",
+    val description: String = "",
+    val fix: String = ""
 )

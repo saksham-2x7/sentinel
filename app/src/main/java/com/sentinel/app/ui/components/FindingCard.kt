@@ -1,4 +1,5 @@
 package com.sentinel.app.ui.components
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -16,27 +17,33 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sentinel.app.domain.Finding
 import com.sentinel.app.domain.Severity
 import com.sentinel.app.ui.theme.*
+
 @Composable
 fun FindingCard(finding: Finding, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
+    
     val (severityColor, severityBg, severityLabel) = when (finding.severity) {
         Severity.HIGH -> Triple(SeverityHigh, SeverityHighContainer, "HIGH")
         Severity.MEDIUM -> Triple(SeverityMedium, SeverityMediumContainer, "MED")
         Severity.LOW -> Triple(SeverityLow, SeverityLowContainer, "LOW")
     }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(CardBackground)
-            .border(1.dp, CardBorder, RoundedCornerShape(16.dp))
+            .background(Color(0xFF1E1E1E))
+            .border(1.dp, Color.DarkGray, RoundedCornerShape(16.dp))
             .clickable { expanded = !expanded }
     ) {
         Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(severityColor))
@@ -50,9 +57,10 @@ fun FindingCard(finding: Finding, modifier: Modifier = Modifier) {
                     Text(finding.type.emoji(), style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.width(10.dp))
                     Column {
-                        Text(finding.title, style = MaterialTheme.typography.titleMedium, color = TextPrimary, maxLines = 2)
+                        // Title in BLUE
+                        Text(finding.title, style = MaterialTheme.typography.titleMedium, color = Color(0xFF42A5F5), fontWeight = FontWeight.Bold, maxLines = 2)
                         if (finding.line != null) {
-                            Text("Line ${finding.line}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            Text("Line ${finding.line}", style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
                         }
                     }
                 }
@@ -69,7 +77,7 @@ fun FindingCard(finding: Finding, modifier: Modifier = Modifier) {
                     Icon(
                         if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = null,
-                        tint = TextSecondary,
+                        tint = Color.Gray,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -80,33 +88,57 @@ fun FindingCard(finding: Finding, modifier: Modifier = Modifier) {
                 exit = shrinkVertically()
             ) {
                 Column(modifier = Modifier.padding(top = 14.dp)) {
-                    HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
+                    HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
                     Spacer(Modifier.height(12.dp))
-                    Text("WHAT'S WRONG", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                    
+                    Text("❌ ERROR IN CODE", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFF5252))
                     Spacer(Modifier.height(4.dp))
-                    Text(finding.description, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF2A1B1B), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF4A2B2B), RoundedCornerShape(8.dp))
+                            .padding(12.dp)
+                    ) {
+                        // Vulnerable code in RED
+                        Text(
+                            text = finding.description, 
+                            style = MaterialTheme.typography.bodyMedium, 
+                            color = Color(0xFFFF5252),
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                    
                     Spacer(Modifier.height(14.dp))
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("HOW TO FIX", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                        Text("✅ CORRECTED CODE", style = MaterialTheme.typography.labelSmall, color = Color(0xFF69F0AE))
                         IconButton(
                             onClick = { clipboard.setText(AnnotatedString(finding.fix)) },
                             modifier = Modifier.size(28.dp)
                         ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy fix", tint = TextSecondary, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy fix", tint = Color.Gray, modifier = Modifier.size(14.dp))
                         }
                     }
                     Spacer(Modifier.height(4.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(SurfaceVariant, RoundedCornerShape(8.dp))
+                            .background(Color(0xFF1B2A1E), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF2B4A33), RoundedCornerShape(8.dp))
                             .padding(12.dp)
                     ) {
-                        Text(finding.fix, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+                        // Corrected code in GREEN
+                        Text(
+                            text = finding.fix, 
+                            style = MaterialTheme.typography.bodyMedium, 
+                            color = Color(0xFF69F0AE),
+                            fontFamily = FontFamily.Monospace
+                        )
                     }
                 }
             }

@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -61,4 +62,23 @@ dependencies {
     implementation(libs.mediapipe.tasks.genai)
     implementation(libs.gson)
     implementation(libs.coroutines.android)
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    
+    // Credential Manager for Google Sign-In
+    implementation("androidx.credentials:credentials:1.2.2")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+}
+
+dependencies {
+}
+
+dependencies {
+    implementation("com.google.firebase:firebase-appcheck-debug:17.1.2")
 }
