@@ -6,8 +6,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object CloudScanEngine {
-    // Secretly hardcoded API key for seamless free tier access
-    private const val GEMINI_API_KEY = "AQ.Ab8RN6K1oj45YHCvOchY3SEaz3W7Ql-NW10TKaMPCXt7wVH3SA"
+    // Correctly formatted 2026 API Key
+    private const val GEMINI_API_KEY = "AQ.Ab8RN6LSvrzkbnANtVMo5EgFi9cHjcU1nyXVmwPL-jV0T8O0wg"
 
     suspend fun scan(
         code: String,
